@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import '@rainbow-me/rainbowkit/styles.css';
 import {
   RainbowKitProvider,
   getDefaultWallets,
@@ -10,6 +11,7 @@ import {
   argentWallet,
   trustWallet,
   ledgerWallet,
+  braveWallet,
 } from '@rainbow-me/rainbowkit/wallets';
 import {
   arbitrum,
@@ -19,6 +21,7 @@ import {
   polygon,
   sepolia,
   zora,
+  localhost,
 } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider } from 'wagmi';
@@ -26,7 +29,7 @@ import { WagmiProvider } from 'wagmi';
 const { wallets } = getDefaultWallets();
 
 const config = getDefaultConfig({
-  appName: 'RainbowKit demo',
+  appName: 'AI NFT with Rainbowkit',
   projectId: 'YOUR_PROJECT_ID',
   wallets: [
     ...wallets,
@@ -36,13 +39,14 @@ const config = getDefaultConfig({
     },
   ],
   chains: [
-    mainnet,
-    polygon,
-    optimism,
-    arbitrum,
-    base,
-    zora,
-    ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true' ? [sepolia] : []),
+    sepolia,
+    // mainnet,
+    // polygon,
+    // optimism,
+    // arbitrum,
+    // base,
+    // zora,
+    ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true' ? [localhost] : []),
   ],
   ssr: true,
 });
