@@ -30,7 +30,7 @@ const { wallets } = getDefaultWallets();
 
 const config = getDefaultConfig({
   appName: 'AI NFT with Rainbowkit',
-  projectId: 'YOUR_PROJECT_ID',
+  projectId: '1c792a3b037558a87e59f5ef1533a66b',
   wallets: [
     ...wallets,
     {

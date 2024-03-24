@@ -1,10 +1,11 @@
+import Mint from "@/components/Mint";
 import Navigation from "@/components/Navigation";
-import Image from "next/image";
 
 export default function Home() {
   return (
-    <main>
+    <main className="h-screen">
       <Navigation />
+      <Mint />
     </main>
   );
 }
