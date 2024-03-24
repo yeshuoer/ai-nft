@@ -4,7 +4,8 @@ import { MintContractAddress, abi } from "@/constants"
 import Image from "next/image"
 import { NFTStorage } from "nft.storage"
 import { FormEvent, useEffect, useState } from "react"
-import { useAccount, useClient, useWriteContract } from "wagmi"
+import { parseEther } from "viem"
+import { useAccount, useClient, useWaitForTransactionReceipt, useWriteContract } from "wagmi"
 
 export default function Mint() {
   const [name, setName] = useState("")
@@ -14,15 +15,23 @@ export default function Mint() {
 
   const [message, setMessage] = useState("")
   const [isWaiting, setIsWaiting] = useState(false)
+  const [isAIGenerating, setIsAIGenerating] = useState(false)
 
-  const {data: hash, writeContract} = useWriteContract()
-
-  const loadBlockchainData = async () => {
-  }
+  const { data: hash, isPending, writeContractAsync, error: mintError } = useWriteContract()
+  const {isLoading: isConfirming, isSuccess: isConfirmed} = useWaitForTransactionReceipt({
+    hash
+  })
 
   useEffect(() => {
-    loadBlockchainData()
-  }, [])
+    let m = ""
+    if (mintError) {
+      m = mintError.name
+    }
+    if (isConfirming) {
+      m = 'Waiting for confirming...'
+    }
+    setMessage(m)
+  }, [mintError, isConfirming])
 
   const createImage = async () => {
     setMessage("Generating Image...")
@@ -63,27 +72,33 @@ export default function Mint() {
     return url
   }
 
-
   const mintImage = async (tokenURI: string) => {
     setMessage("Waiting for Mint...")
-    writeContract({
-      abi: abi,
-      address: MintContractAddress,
-      functionName: 'mint',
-      args: [],
-    })
+    try {
+      await writeContractAsync({
+        abi: abi,
+        address: MintContractAddress,
+        functionName: 'mint',
+        args: [tokenURI],
+        value: parseEther('0.1'),
+      })
+    } catch (err) {
+      console.log('mint error', err)
+    }
   }
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
+    setImage("")
     setIsWaiting(true)
+    setIsAIGenerating(true)
     // Call AI API to generate a image based on description
     const imageData = await createImage()
+    setIsAIGenerating(false)
     // Upload image to IPFS (NFT.Storage)
     const url = await uploadImage(imageData)
-    console.log('url is', url)
     // Mint NFT
-    // await mintImage(url)
+    await mintImage(url)
     setIsWaiting(false)
     setMessage("")
   }
@@ -115,19 +130,33 @@ export default function Mint() {
         />
       </div>
 
-      <button type="submit" className="text-white bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center">
+      <button
+        disabled={isWaiting}
+        type="submit"
+        className="text-white bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200 disabled:shadow-none">
         Create & Mint
       </button>
+
+
+      {
+        hash && <p>Transaction Hash: {hash}</p>
+      }
+      {
+        isConfirming && <p>Confirming...</p>
+      }
+      {
+        isConfirmed && <p>Confirmed</p>
+      }
     </form>
 
     <div className="relative">
       {/* image */}
       <div className="border-blue-500 border-4 w-[18rem] h-[18rem] flex justify-center items-center">
         {
-          (!isWaiting && image) && <Image alt="AI Image" src={image} width={400} height={400} />
+          image && <Image alt="AI Image" src={image} width={400} height={400} />
         }
         {
-          isWaiting && <Image src="/Spinner.svg" alt="Spinner" width={80} height={80} />
+          isAIGenerating && <Image src="/Spinner.svg" alt="Spinner" width={80} height={80} />
         }
       </div>
       {/* message */}
